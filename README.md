@@ -5,7 +5,7 @@ and admin tools for phases, lessons, and user accounts.
 
 ## Run locally
 
-Use Node.js 22.9 or newer and a PostgreSQL database dedicated to this project.
+Use Node.js 22.17 or newer within Node 22, or Node 24, and a PostgreSQL database dedicated to this project.
 
 1. Run `npm install`.
 2. Copy `.env.example` to `.env` and set `DB_URL`.
@@ -27,6 +27,19 @@ The internal Render URL is for services in the same account and region.
 Environment variables are private and declared in `src/env.ts`. Never commit
 `.env`. The setup/admin commands read the root `.env`; shell variables take
 precedence. Database setup runs explicitly rather than on requests.
+
+## Deploy on Render
+
+Create a Node Web Service using build command `npm ci && npm run build` and start
+command `npm start` (equivalent to `node build/index.js`). The Node adapter builds
+the production server into `build/`. Set `DB_URL` and set `ORIGIN` to the site's
+public URL, such as `https://your-service.onrender.com`, for form submissions.
+Run `npm run db:setup` against the target database before using the app.
+
+`.node-version` selects the latest Node 22 release on Render. SvelteKit requires
+at least Node 22.17. If the service already defines a `NODE_VERSION` environment
+variable, change it to `22` or remove it: Render gives that variable precedence
+over the repository file. See [Render's Node version settings](https://render.com/docs/node-version).
 
 ## Create your admin account
 
