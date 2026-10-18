@@ -1,5 +1,7 @@
 <script lang="ts">
  import Icon from '#lib/Icon.svelte';
+ import type { PageProps } from './$types';
+ let { data }: PageProps = $props();
  import './page.css';
  import './theme.css';
  let menuOpen = $state(false);
@@ -56,7 +58,8 @@
    <a href="#pillars" onclick={() => menuOpen = false}>Explore the pillars</a>
    <a href="#system" onclick={() => menuOpen = false}>Our approach</a>
    <a href="#resources" onclick={() => menuOpen = false}>Resources</a>
-   <button class="nav-login" onclick={() => openPreview('Welcome back')}>Log in <Icon name="arrow" size={16}/></button>
+   <a href="/phases">Take the course</a>
+   <a class="nav-login" href={data.isLoggedIn ? '/dashboard' : '/login'}>{data.isLoggedIn ? 'Dashboard' : 'Log in'} <Icon name="arrow" size={16}/></a>
   </nav>
   <a class="button small nav-cta" href="#pillars">Find your starting point <Icon name="arrow" size={17}/></a>
   <button class="menu-toggle" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} onclick={() => menuOpen = !menuOpen}><Icon name={menuOpen ? 'close' : 'menu'}/></button>
@@ -114,10 +117,10 @@
  {#if activePillar}<div class="dialog-image card-image" style={`--col:${activePillar.col};--row:${activePillar.row}`}></div>{:else}<div class="dialog-symbol"><Icon name={modal === 'Welcome back' ? 'user' : 'compass'} size={32}/></div>{/if}
  <h2 id="dialog-title">{modal}</h2>
  {#if activePillar}<p>{activePillar.description}</p><div class="preview-outline"><span class="eyebrow">PLANNED LEARNING EXPERIENCE</span>{#each ['Get oriented', 'Build your foundation', 'Make a practical plan', 'Put it into practice', 'Review your readiness'] as lesson, i}<div><span>0{i+1}</span><strong>{lesson}</strong><Icon name="book" size={17}/></div>{/each}</div>
- {:else if modal === 'Welcome back'}<p>Your readiness journey, all in one place.</p><form class="login-preview" onsubmit={(event) => event.preventDefault()}><label for="login-email">Email address</label><input id="login-email" type="email" placeholder="you@example.com"/><label for="login-password">Password</label><input id="login-password" type="password" placeholder="Enter your password"/><button class="button dark" disabled>Log in — coming soon</button></form>
+ {:else if modal === 'Welcome back'}<p>Your readiness journey, all in one place.</p><a class="button dark" href="/login">Log in</a>
  {:else if modal === 'Find your starting point'}<p>Everyone starts somewhere. A short readiness check will help you understand where you are and choose a practical first step.</p><div class="assessment-preview"><span><Icon name="clock"/> At your own pace</span><span><Icon name="shield"/> Private by design</span></div><a class="button dark" href="#pillars" onclick={closePreview}>Explore the pillars for now <Icon name="arrow" size={18}/></a>
  {:else}<p>This space is reserved for {modal.toLowerCase()}. The final content and tools will be added as Phase Ready takes shape.</p><a class="button dark" href="#resources" onclick={closePreview}>Explore resources <Icon name="arrow" size={18}/></a>{/if}
- <p class="preview-notice">Interface preview only. Course lessons, accounts, and downloads are not active yet.</p>
+ <p class="preview-notice">This resource is a preview. <a href="/phases">Visit the course</a> for published phases and lessons.</p>
 </dialog>
 
 

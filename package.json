@@ -4,6 +4,12 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
+		"test": "npm run test:middleware && npm run test:validation && npm run test:routes",
+		"test:routes": "node --test tests/routes.test.mjs",
+		"user:admin": "node --env-file-if-exists=.env scripts/promote-admin.js",
+		"test:validation": "node --test tests/validation.test.mjs",
+		"test:middleware": "node --test tests/middleware.test.mjs",
+		"db:setup": "node --env-file-if-exists=.env scripts/setup-db.js",
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
@@ -12,9 +18,13 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
+		"@electric-sql/pglite": "^0.5.10",
 		"@sveltejs/adapter-auto": "^8.0.0",
 		"@sveltejs/kit": "^3.0.0",
 		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@types/bcrypt": "^6.0.0",
+		"@types/pg": "^8.23.1",
+		"@types/sanitize-html": "^2.16.2",
 		"svelte": "^5.57.1",
 		"svelte-check": "^4.6.0",
 		"typescript": "^6.0.3",
@@ -23,5 +33,11 @@
 	"imports": {
 		"#lib": "./src/lib/index.js",
 		"#lib/*": "./src/lib/*"
+	},
+	"dependencies": {
+		"bcrypt": "^6.0.0",
+		"marked": "^18.1.1",
+		"pg": "^8.23.1",
+		"sanitize-html": "^2.18.1"
 	}
 }
