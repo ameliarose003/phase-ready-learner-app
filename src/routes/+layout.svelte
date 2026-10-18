@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { LayoutProps } from './$types';
+	import SiteShell from '#lib/SiteShell.svelte';
 	import './portal.css';
 
 	let { children, data }: LayoutProps = $props();
@@ -17,12 +18,9 @@
 	{/each}
 {/each}
 
-{#if data.pathname !== '/'}
-	<header class="portal-header"><a class="portal-brand" href="/">Phase Ready</a><nav aria-label="Course navigation"><a href="/phases">Course phases</a><a href="/lessons">Lessons</a>{#if data.isLoggedIn}<a href={data.currentUser?.role_name === 'admin' ? '/admin' : '/dashboard'}>Dashboard</a><a href="/logout">Log out</a>{:else}<a href="/login">Log in</a><a href="/signup">Sign up</a>{/if}</nav></header>
-	<main class="portal">{@render children()}</main>
-{:else}
+<SiteShell {data}>
 	{@render children()}
-{/if}
+</SiteShell>
 
 <style>
 	.flash-message { padding: 1rem; background: #e4f0f2; color: #183c46; font-family: system-ui, sans-serif; }

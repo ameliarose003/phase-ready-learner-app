@@ -192,6 +192,10 @@ test('learners resume unfinished lessons, save completion across sessions, and c
 
 test('login form links to signup, retains email on errors, and accepts valid legacy passwords', async () => {
 	const form = await (await visit('/login')).text();
+	assert.match(form, /<dialog[^>]*class="[^"]*login-dialog/);
+	assert.match(form, /aria-labelledby="login-title"/);
+	assert.match(form, /aria-label="Close login"/);
+	assert.ok(!form.includes('class="portal-header"'));
 	assert.match(form, /<form method="POST" action="\/login"/);
 	assert.match(form, /href="\/signup"/);
 	const passwordInput = form.match(/<input[^>]*name="password"[^>]*>/)[0];
@@ -201,6 +205,7 @@ test('login form links to signup, retains email on errors, and accepts valid leg
 	assert.equal(invalid.status, 400);
 	const invalidBody = await invalid.text();
 	assert.match(invalidBody, /value="learner@example.com"/);
+	assert.match(invalidBody, /class="[^"]*login-dialog/);
 	assert.ok(!invalidBody.includes('IncorrectSecret!'));
 	const hash = await bcrypt.hash('short', 4);
 	await driver.query("INSERT INTO users (name, email, password, role_id) SELECT 'Legacy learner', 'legacy@example.com', $1, id FROM roles WHERE role_name = 'user'", [hash]);
