@@ -2,11 +2,10 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import { marked } from 'marked';
 import sanitizeHtml from 'sanitize-html';
-import { requireLogin, requireRole } from '../middleware/auth.js';
+import { requireRole } from '../middleware/auth.js';
 import { lessonValidation } from '../middleware/validation/lessons.js';
 import { titleExists, getAllLessons, getLessonById, saveLesson, updateLesson, deleteLesson } from '../lessons/lessons.js';
 import { getAllPhases } from '../phases/phases.js';
-import { openLesson, isLessonComplete, setLessonCompletion } from '../lessons/progress.js';
 import { database, formFailure, routeId, safeValues } from './shared.js';
 
 export async function listLessons() {
@@ -15,7 +14,6 @@ export async function listLessons() {
 }
 
 export async function readLesson(event: RequestEvent) {
-	const viewer = await requireLogin(event);
 	const id = routeId(event.params.id);
 	const lesson = await database(() => getLessonById(id));
 	if (!lesson) error(404, 'Lesson not found.');
@@ -26,19 +24,7 @@ export async function readLesson(event: RequestEvent) {
 	});
 	// Readers need sanitized HTML, not a second copy of raw Markdown in page data.
 	const { content: _content, ...metadata } = lesson;
-	let completed = false;
-	if (viewer.role_name === 'user') {
-		await database(() => openLesson(viewer.id, id));
-		completed = await database(() => isLessonComplete(viewer.id, id));
-	}
-	return { lesson: metadata, lessonHtml, completed };
-}
-
-export async function completeLesson(event: RequestEvent, complete: boolean) {
-	const viewer = await requireRole('user')(event);
-	const id = routeId(event.params.id);
-	if (!await database(() => setLessonCompletion(viewer.id, id, complete))) error(404, 'Lesson not found.');
-	redirect(303, `/lessons/${id}`);
+	return { lesson: metadata, lessonHtml };
 }
 
 export async function loadLessonForm(event: RequestEvent) {

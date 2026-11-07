@@ -1,10 +1,10 @@
 import { dev } from '$app/env';
 import type { RequestEvent } from '@sveltejs/kit';
 
-export function globalMiddleware({ locals, url }: RequestEvent) {
+export function globalMiddleware({ locals }: RequestEvent) {
 	locals.currentYear = new Date().getFullYear();
 	locals.NODE_ENV = dev ? 'development' : 'production';
-	locals.queryParams = Object.fromEntries(url.searchParams);
+	locals.queryParams = {};
 	locals.session = null;
 	locals.currentUser = null;
 	locals.isLoggedIn = false;

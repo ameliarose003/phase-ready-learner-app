@@ -95,28 +95,27 @@ test('public pages and API work without exposing lesson content or credentials',
 	assert.match(me.headers.get('cache-control'), /no-store/);
 });
 
-test('lesson pages guide learners and reserve editing controls for admins', async () => {
-	const publicList = await (await visit('/lessons')).text();
-	assert.match(publicList, /Log in to take this lesson/);
-	assert.match(publicList, /href="\/signup"/);
-	assert.ok(!publicList.includes('Delete lesson'));
-	const learnerList = await (await visit('/lessons', { jar: learner })).text();
-	assert.match(learnerList, /Start lesson/);
-	assert.ok(!learnerList.includes('Delete lesson'));
-	assert.ok(!learnerList.includes('href="/lessons/upload-video"'));
-	assert.ok(!learnerList.includes(secret));
-	assert.ok(!learnerList.includes('private.mp4'));
-	const adminList = await (await visit('/lessons', { jar: admin })).text();
-	assert.match(adminList, /Add a lesson/);
-	assert.match(adminList, /Delete lesson/);
-	const lesson = await (await visit('/lessons/' + lessonId, { jar: learner })).text();
-	assert.ok(lesson.includes(secret));
-	assert.match(lesson, /<video controls/);
-	assert.match(lesson, /href="\/lessons">Return to all lessons/);
-	const editor = await (await visit('/lessons/' + lessonId + '/edit', { jar: admin })).text();
-	assert.match(editor, /href="\/lessons">Cancel/);
-	assert.match(editor, /name="contentFile"/);
-	assert.match(editor, /name="video_url"/);
+test('public guides contain the same sanitized content for every visitor', async () => {
+ const publicList = await (await visit('/lessons')).text();
+ assert.match(publicList, /Read lesson/);
+ assert.match(publicList, /href="\/signup"/);
+ for (const jar of [new Map(), learner, admin]) {
+  const list = await (await visit('/lessons', { jar })).text();
+  assert.equal(list, publicList);
+  assert.ok(!list.includes('Delete lesson'));
+  const response = await visit('/lessons/' + lessonId, { jar });
+  assert.equal(response.status, 200);
+  const body = await response.text();
+  assert.ok(body.includes(secret));
+  assert.ok(!body.includes('<script>alert(1)</script>'));
+  assert.ok(!body.includes('learner@example.com'));
+  assert.ok(!body.includes('admin@example.com'));
+  assert.match(body, /<video controls/);
+  assert.ok(!response.headers.has('set-cookie'));
+ }
+ const editor = await (await visit('/lessons/' + lessonId + '/edit', { jar: admin })).text();
+ assert.match(editor, /name="contentFile"/);
+ assert.match(editor, /name="video_url"/);
 });
 
 test('all protected original routes have working page equivalents', async () => {
@@ -147,47 +146,46 @@ test('dashboard shows account details and dates, supports logout, and gates admi
 	assert.equal((await visit('/admin', { jar: learner })).status, 403);
 });
 
-test('learners resume unfinished lessons, save completion across sessions, and can undo it', async () => {
-	await driver.query('DELETE FROM lesson_progress WHERE user_id = $1', [learnerId]);
-	const extra = [];
-	for (const [title, order] of [['Earlier unvisited lesson', 1], ['Most recently opened lesson', 2]]) {
-		extra.push((await driver.query("INSERT INTO lessons (phase_id, title, description, content, slug, display_order) VALUES ($1, $2, 'Overview', 'Lesson body', $3, $4) RETURNING id", [phaseId, title, 'progress-' + order, order])).rows[0].id);
-	}
-	try {
-		let body = await (await visit('/dashboard', { jar: learner })).text();
-		assert.match(body, /0 of 3 lessons completed/);
-		assert.ok(body.includes('href="/lessons/' + lessonId + '">Start lesson'));
-		await visit('/lessons/' + extra[1], { jar: learner });
-		body = await (await visit('/dashboard', { jar: learner })).text();
-		assert.ok(body.includes('href="/lessons/' + extra[1] + '">Continue lesson'));
-		const complete = '/lessons/' + extra[1] + '?/complete';
-		assert.equal((await visit(complete, { jar: learner, method: 'POST', data: { user_id: String(adminId) } })).status, 303);
-		const saved = (await driver.query('SELECT completed_at FROM lesson_progress WHERE user_id = $1 AND lesson_id = $2', [learnerId, extra[1]])).rows[0].completed_at;
-		assert.ok(saved);
-		assert.equal((await driver.query('SELECT * FROM lesson_progress WHERE user_id <> $1', [learnerId])).rowCount, 0);
-		await visit(complete, { jar: learner, method: 'POST', data: {} });
-		assert.equal(new Date((await driver.query('SELECT completed_at FROM lesson_progress WHERE user_id = $1 AND lesson_id = $2', [learnerId, extra[1]])).rows[0].completed_at).getTime(), new Date(saved).getTime());
-		const freshSession = new Map();
-		await signIn('learner@example.com', freshSession);
-		body = await (await visit('/dashboard', { jar: freshSession })).text();
-		assert.match(body, /1 of 3 lessons completed · 33%/);
-		assert.match(body, /Review lesson/);
-		assert.ok(body.includes('href="/lessons/' + lessonId + '">Start lesson'));
-		for (const id of [lessonId, extra[0]]) await visit('/lessons/' + id + '?/complete', { jar: learner, method: 'POST', data: {} });
-		body = await (await visit('/dashboard', { jar: learner })).text();
-		assert.match(body, /3 of 3 lessons completed · 100%/);
-		assert.match(body, /completed every lesson/);
-		assert.equal((await visit('/lessons/' + lessonId + '?/reopen', { jar: learner, method: 'POST', data: {} })).status, 303);
-		assert.match(await (await visit('/dashboard', { jar: learner })).text(), /2 of 3 lessons completed · 67%/);
-		assert.match(await (await visit('/lessons/' + lessonId, { jar: learner })).text(), /Mark lesson complete/);
-		assert.equal((await visit('/lessons/999999?/complete', { jar: learner, method: 'POST', data: {} })).status, 404);
-		assert.equal((await visit(complete, { jar: admin, method: 'POST', data: {} })).status, 403);
-		assert.equal((await visit(complete, { method: 'POST', data: {} })).status, 303);
-	} finally {
-		for (const id of extra) await driver.query('DELETE FROM lessons WHERE id = $1', [id]);
-		assert.equal((await driver.query('SELECT * FROM lesson_progress WHERE lesson_id = ANY($1::integer[])', [extra])).rowCount, 0);
-		await driver.query('DELETE FROM lesson_progress WHERE user_id = $1', [learnerId]);
-	}
+async function progress(id, data, jar = learner, origin = base) {
+ return fetch(base + '/api/lessons/' + id + '/progress', {
+  method: 'POST', redirect: 'manual',
+  headers: { 'content-type': 'application/json', origin, cookie: [...jar].map(([k, v]) => k + '=' + v).join('; ') },
+  body: JSON.stringify(data)
+ });
+}
+
+test('authenticated progress API preserves dashboard progress and rejects unsafe writes', async () => {
+ await driver.query('DELETE FROM lesson_progress WHERE user_id = $1', [learnerId]);
+ const path = '/api/lessons/' + lessonId + '/progress';
+ assert.deepEqual(await (await visit(path, { jar: learner })).json(), { completed: false });
+ assert.equal((await progress(lessonId, { userId: learnerId, opened: true })).status, 200);
+ assert.match(await (await visit('/dashboard', { jar: learner })).text(), /Continue lesson/);
+ assert.equal((await progress(lessonId, { userId: learnerId, completed: true })).status, 200);
+ assert.match(await (await visit('/dashboard', { jar: learner })).text(), /1 of 1 lessons completed/);
+ const first = (await driver.query('SELECT completed_at FROM lesson_progress WHERE user_id = $1 AND lesson_id = $2', [learnerId, lessonId])).rows[0].completed_at;
+ await progress(lessonId, { userId: learnerId, completed: true });
+ const second = (await driver.query('SELECT completed_at FROM lesson_progress WHERE user_id = $1 AND lesson_id = $2', [learnerId, lessonId])).rows[0].completed_at;
+ assert.equal(new Date(first).getTime(), new Date(second).getTime());
+ assert.equal((await progress(lessonId, { userId: learnerId, completed: false })).status, 200);
+ assert.deepEqual(await (await visit(path, { jar: learner })).json(), { completed: false });
+ assert.equal((await progress(lessonId, { userId: adminId, completed: true })).status, 409);
+ assert.equal((await progress(lessonId, { userId: learnerId, completed: 'yes' })).status, 400);
+ assert.equal((await progress(lessonId, { userId: learnerId, completed: true }, learner, 'https://evil.example')).status, 403);
+ assert.equal((await progress(lessonId, { userId: learnerId, completed: true }, admin)).status, 403);
+ assert.equal((await progress(lessonId, { userId: learnerId, completed: true }, new Map())).status, 303);
+ assert.equal((await progress(999999, { userId: learnerId, completed: true })).status, 404);
+ assert.match((await visit(path, { jar: learner })).headers.get('cache-control'), /no-store/);
+ assert.equal((await driver.query('SELECT * FROM lesson_progress WHERE user_id <> $1', [learnerId])).rowCount, 0);
+});
+
+test('offline manifest enumerates all guides and never includes private routes or user data', async () => {
+ const response = await visit('/api/content/offline', { jar: admin });
+ assert.equal(response.status, 200);
+ const bundle = await response.json();
+ assert.ok(bundle.pages.includes('/lessons/' + lessonId));
+ assert.ok(bundle.pages.includes('/phases/' + phaseId));
+ assert.ok(!JSON.stringify(bundle).includes('admin@example.com'));
+ assert.ok(!bundle.pages.some((path) => /admin|dashboard|users|login/.test(path)));
 });
 
 test('login form links to signup, retains email on errors, and accepts valid legacy passwords', async () => {
@@ -236,7 +234,7 @@ test('signup validates confirmations, saves a bcrypt hash, assigns learner, and 
 });
 
 test('anonymous requests redirect and learners cannot administer or edit another account', async () => {
-	for (const path of ['/dashboard', '/lessons/' + lessonId]) {
+	for (const path of ['/dashboard']) {
 		const response = await visit(path);
 		assert.equal(response.status, 303);
 		assert.equal(response.headers.get('location'), '/login');

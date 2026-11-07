@@ -45,7 +45,7 @@ async function query(text, values = []) {
 	throw new Error(`Unexpected database operation: ${sql}`);
 }
 
-function event(path = '/', token) {
+function event(path = '/api/me', token) {
 	const jar = new Map(token ? [[sessions.SESSION_COOKIE, token]] : []);
 	return {
 		url: new URL(path, 'http://localhost'),
@@ -92,7 +92,7 @@ after(async () => {
 });
 
 test('anonymous requests and global layout data work without database access', async () => {
-	const request = await initialize(event('/?search=water'));
+	const request = await initialize(event('/login?search=water'));
 	const data = await layout.load({ ...request, depends: () => {} });
 	assert.equal(data.currentUser, null);
 	assert.equal(data.isLoggedIn, false);
@@ -104,17 +104,17 @@ test('anonymous requests and global layout data work without database access', a
 });
 
 test('malformed, unknown, and expired tokens cannot authenticate', async () => {
-	const malformed = await initialize(event('/', 'user=9;role=admin'));
+	const malformed = await initialize(event('/api/me', 'user=9;role=admin'));
 	assert.equal(malformed.locals.currentUser, null);
 	assert.equal(malformed.cookies.get(sessions.SESSION_COOKIE), undefined);
 	assert.equal(statements.length, 0);
 	const token = 'a'.repeat(64);
 	stored.set(digest(token), { user_id: 9, expires_at: new Date(0), flash: blank() });
-	const expired = await initialize(event('/', token));
+	const expired = await initialize(event('/api/me', token));
 	assert.equal(expired.locals.currentUser, null);
 	assert.equal(expired.cookies.get(sessions.SESSION_COOKIE), undefined);
 	stored.clear();
-	assert.equal((await initialize(event('/', token))).locals.currentUser, null);
+	assert.equal((await initialize(event('/api/me', token))).locals.currentUser, null);
 });
 
 test('sessions hash tokens, restore current roles, and exclude password data', async () => {
@@ -129,7 +129,7 @@ test('sessions hash tokens, restore current roles, and exclude password data', a
 	assert.equal(request.cookies.get(`${sessions.SESSION_COOKIE}:options`).httpOnly, true);
 	assert.equal(request.cookies.get(`${sessions.SESSION_COOKIE}:options`).sameSite, 'lax');
 	users.get(9).role_name = 'user';
-	const next = await initialize(event('/', token));
+	const next = await initialize(event('/api/me', token));
 	assert.equal(next.locals.currentUser.role_name, 'user');
 	assert.ok(!('password' in next.locals.currentUser));
 	await assert.rejects(auth.requireRole('admin')(next), (error) => error.status === 403);
@@ -154,7 +154,7 @@ test('flash messages survive a redirect and are consumed by type or all at once'
 	const request = await initialize(event());
 	await request.locals.flash('success', 'Saved lesson');
 	await request.locals.flash('info', 'Next step');
-	const next = await initialize(event('/', request.cookies.get(sessions.SESSION_COOKIE)));
+	const next = await initialize(event('/api/me', request.cookies.get(sessions.SESSION_COOKIE)));
 	assert.deepEqual(await next.locals.flash('success'), ['Saved lesson']);
 	assert.deepEqual(await next.locals.flash('success'), []);
 	assert.deepEqual(await next.locals.flash(), { ...blank(), info: ['Next step'] });
@@ -194,7 +194,7 @@ test('guards redirect anonymous users, reject learners, and allow admins on POST
 	const request = event('/admin/lessons');
 	request.request = new Request(request.url, { method: 'POST' });
 	await assert.rejects(initialize(request), (error) => error.status === 303 && error.location === '/login');
-	const next = await initialize(event('/', request.cookies.get(sessions.SESSION_COOKIE)));
+	const next = await initialize(event('/api/me', request.cookies.get(sessions.SESSION_COOKIE)));
 	assert.deepEqual(await next.locals.flash('error'), ['You must be logged in to access this page.']);
 	await sessions.startSession(next, 5);
 	const learner = event('/admin/lessons', next.cookies.get(sessions.SESSION_COOKIE));

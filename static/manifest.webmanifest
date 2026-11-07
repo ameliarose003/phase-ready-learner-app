@@ -1,0 +1,11 @@
+{
+  "name": "Phase Ready",
+  "short_name": "Phase Ready",
+  "description": "Emergency preparedness guides available offline after download.",
+  "start_url": "/phases",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#183c46",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

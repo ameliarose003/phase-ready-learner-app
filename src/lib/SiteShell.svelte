@@ -21,7 +21,7 @@
 <header class="header" id="top">
  <div class="nav-wrap">
   <a href={homeLink('#top')} class="brand" aria-label="Phase Ready home"><span class="brand-mark" aria-hidden="true"></span></a>
-  <nav aria-label="Main navigation" class:mobile-open={menuOpen}>
+  <nav data-sveltekit-reload aria-label="Main navigation" class:mobile-open={menuOpen}>
    <a href={homeLink('#pillars')} onclick={() => menuOpen = false}>Explore the pillars</a>
    <a href={homeLink('#system')} onclick={() => menuOpen = false}>Our approach</a>
    <a href={homeLink('#resources')} onclick={() => menuOpen = false}>Resources</a>
@@ -35,7 +35,7 @@
 </header>
 
 
-<main id="main" class:portal={!['/', '/login', '/signup'].includes(data.pathname)}>{@render children()}</main>
+<main data-sveltekit-reload id="main" class:portal={!['/', '/login', '/signup'].includes(data.pathname)}>{@render children()}</main>
 
 <footer class="footer">
  <div class="footer-main">

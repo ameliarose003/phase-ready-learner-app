@@ -2,12 +2,33 @@
 	import type { LayoutProps } from './$types';
 	import SiteShell from '#lib/SiteShell.svelte';
 	import './portal.css';
+	import { afterNavigate } from '$app/navigation';
+	import { page } from '$app/state';
+	import { sessionUser } from '#lib/session.js';
+	import OfflineStatus from '#lib/OfflineStatus.svelte';
 
 	let { children, data }: LayoutProps = $props();
+	let requestVersion = 0;
+	afterNavigate(() => {
+		const version = ++requestVersion;
+		sessionUser.set(data.publicGuide ? null : data.currentUser);
+		if (data.publicGuide) {
+			fetch('/api/me', { cache: 'no-store' }).then(async (response) => {
+				if (!response.ok) return;
+				const account = await response.json();
+				if (version === requestVersion) sessionUser.set(account.user);
+			}).catch(() => { /* Public reading remains available without authentication. */ });
+		}
+	});
+	let shellData = $derived({ ...data, pathname: page.url.pathname,
+		currentUser: data.publicGuide ? $sessionUser : data.currentUser,
+		isLoggedIn: data.publicGuide ? $sessionUser !== null : data.isLoggedIn });
 </script>
 
 <svelte:head>
 	<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+	<link rel="manifest" href="/manifest.webmanifest" />
+	<meta name="theme-color" content="#183c46" />
 </svelte:head>
 
 {#each Object.entries(data.flashMessages) as [type, messages]}
@@ -18,7 +39,8 @@
 	{/each}
 {/each}
 
-<SiteShell {data}>
+<SiteShell data={shellData}>
+	{#if data.publicGuide}<OfflineStatus />{/if}
 	{@render children()}
 </SiteShell>
 

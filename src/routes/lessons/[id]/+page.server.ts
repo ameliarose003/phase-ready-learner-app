@@ -1,8 +1,7 @@
-import { readLesson, completeLesson } from '#lib/server/controllers/lessons.js';
-import type { PageServerLoad, Actions } from './$types';
+import { readLesson } from '#lib/server/controllers/lessons.js';
+import { getAllLessons } from '#lib/server/lessons/lessons.js';
+import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = readLesson;
-export const actions: Actions = {
-	complete: (event) => completeLesson(event, true),
-	reopen: (event) => completeLesson(event, false)
-};
+export const prerender = true;
+export const entries = async () => (await getAllLessons()).map((lesson) => ({ id: String(lesson.id) }));
 

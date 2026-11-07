@@ -4,10 +4,16 @@ import { globalMiddleware } from '#lib/server/middleware/global.js';
 import { createFlash } from '#lib/server/middleware/flash.js';
 import { requireRole } from '#lib/server/middleware/auth.js';
 import { restoreSession } from '#lib/server/sessions.js';
+import { isPublicGuide } from '#lib/public-routes.js';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	globalMiddleware(event);
 	event.locals.flash = createFlash(event);
+	// Public HTML and its SvelteKit data must be identical for every visitor.
+	// In particular, a database/session outage must not prevent reading a guide.
+	if ((event.request?.method ?? 'GET') === 'GET' && isPublicGuide(event.url.pathname)) {
+		return resolve(event);
+	}
 	try { await restoreSession(event); }
 	catch { error(503, 'Unable to verify your session. Please try again shortly.'); }
 	// Protect admin pages, form actions, and endpoints before they run.

@@ -1,0 +1,168 @@
+
+> learners-app@0.0.1 test:routes
+> node --test tests/routes.test.mjs
+
+303 POST /login
+303 POST /login
+200 GET /
+200 GET /signup
+200 GET /login
+200 GET /phases
+200 GET /phases/1
+200 GET /lessons
+200 GET /api/me
+✔ public pages and API work without exposing lesson content or credentials (4398.782ms)
+200 GET /lessons
+200 GET /lessons
+200 GET /lessons/1
+200 GET /lessons
+200 GET /lessons/1
+200 GET /lessons
+200 GET /lessons/1
+200 GET /lessons/1/edit
+✔ public guides contain the same sanitized content for every visitor (141.7037ms)
+200 GET /admin
+200 GET /logout
+200 GET /users
+200 GET /users/2/edit
+200 GET /users/2/update
+200 GET /lessons/upload-video
+200 GET /lessons/1
+200 GET /lessons/1/edit
+200 GET /lessons/1/update
+200 GET /admin/phases
+200 GET /api/me
+✔ all protected original routes have working page equivalents (196.2906ms)
+200 GET /dashboard
+200 GET /admin
+303 GET /dashboard
+403 GET /admin
+✔ dashboard shows account details and dates, supports logout, and gates admin controls (45.196ms)
+200 GET /api/lessons/1/progress
+200 POST /api/lessons/1/progress
+200 GET /dashboard
+200 POST /api/lessons/1/progress
+200 GET /dashboard
+200 POST /api/lessons/1/progress
+200 POST /api/lessons/1/progress
+200 GET /api/lessons/1/progress
+409 POST /api/lessons/1/progress
+400 POST /api/lessons/1/progress
+403 POST /api/lessons/1/progress
+403 POST /api/lessons/1/progress
+303 POST /api/lessons/1/progress
+404 POST /api/lessons/999999/progress
+200 GET /api/lessons/1/progress
+✔ authenticated progress API preserves dashboard progress and rejects unsafe writes (81.574ms)
+200 GET /api/content/offline
+✔ offline manifest enumerates all guides and never includes private routes or user data (19.1595ms)
+200 GET /login
+400 POST /login
+303 POST /login
+200 GET /api/me
+✔ login form links to signup, retains email on errors, and accepts valid legacy passwords (38.7209ms)
+400 POST /signup
+303 POST /signup
+200 GET /login
+200 GET /login
+409 POST /signup
+303 POST /login
+200 GET /api/me
+✔ signup validates confirmations, saves a bcrypt hash, assigns learner, and shows flash once (857.8335ms)
+303 GET /dashboard
+403 GET /users
+403 GET /admin/phases
+403 GET /lessons/upload-video
+403 GET /users/1/edit
+403 POST /users/1/update
+403 POST /users/1/delete
+403 POST /lessons/1/update
+403 POST /lessons/1/delete
+403 GET /%61dmin/phases
+✔ anonymous requests redirect and learners cannot administer or edit another account (90.6496ms)
+400 POST /users/2/update
+303 POST /users/2/update
+200 GET /api/me
+404 GET /users/not-an-id/edit
+404 GET /users/999999/edit
+✔ account updates check ownership and prevent self-promotion (46.75ms)
+200 GET /users/1/edit
+200 GET /users/2/edit
+200 GET /users/2/edit
+400 POST /users/1/update
+200 GET /api/me
+303 POST /users/1/update
+200 GET /api/me
+✔ account forms keep own roles read-only and allow admins to edit other roles (86.9215ms)
+303 POST /admin/phases?/create
+303 POST /admin/phases?/update
+303 POST /lessons/upload-video
+200 GET /lessons/2
+303 POST /lessons/2/update
+303 POST /lessons/2/delete
+404 GET /lessons/2
+✔ admins create and edit phases, then create, read, update and delete Markdown lessons (70.9953ms)
+400 POST /lessons/upload-video
+404 GET /lessons/not-an-id
+400 POST /lessons/upload-video
+✔ invalid lesson submissions preserve safe fields and make no database changes (31.5268ms)
+409 POST /lessons/upload-video
+303 POST /lessons/1/update
+409 POST /lessons/upload-video
+303 POST /lessons/upload-video
+409 POST /lessons/1/update
+404 POST /lessons/999999/update
+✔ lesson title checks handle duplicates, unchanged edits, and moves between phases (63.8769ms)
+303 POST /lessons/upload-video
+409 POST /lessons/upload-video
+✔ concurrent lesson submissions save one record and return a useful duplicate error (19.4715ms)
+307 GET /podcasts
+307 GET /podcasts/upload-video
+307 GET /podcasts/1/edit
+307 GET /podcasts/1/update
+307 GET /podcasts/1/delete
+307 POST /podcasts/1/update
+✔ legacy podcast routes redirect to their lesson equivalents and preserve POST methods (29.1153ms)
+303 POST /login
+303 POST /users/7/update
+200 GET /api/me
+200 GET /logout
+200 GET /api/me
+303 POST /users/7/delete
+200 GET /api/me
+303 POST /login
+303 POST /logout
+200 GET /api/me
+✔ admin account deletion removes its sessions and GET logout never logs a user out (69.4795ms)
+200 GET /users
+403 POST /users/1/delete
+200 GET /api/me
+✔ admins cannot delete their own account through the UI or a direct POST (16.0225ms)
+303 POST /login
+503 POST /logout
+200 GET /api/me
+✔ logout reports a failed revocation and still clears the browser cookie (14.0528ms)
+400 POST /login
+400 POST /login
+400 POST /login
+400 POST /login
+400 POST /login
+400 POST /login
+400 POST /login
+400 POST /login
+400 POST /login
+400 POST /login
+429 POST /login
+✔ login errors remain generic and repeated attempts are throttled in PostgreSQL (124.5224ms)
+503 GET /phases
+303 GET /dashboard
+503 GET /dashboard
+✔ database failures show a useful error instead of silently returning an empty course (12.5679ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6730.142

@@ -12,7 +12,10 @@ export default defineConfig({
 			},
 
 			// Build a standalone Node server for the Render web service.
-			adapter: adapter()
+			adapter: adapter(),
+			// Account and admin links remain dynamic. Content route entries enumerate
+			// the complete course explicitly rather than crawling protected links.
+			prerender: { crawl: false, entries: ['/', '/phases', '/lessons', '/api/content/offline'] }
 		})
 	]
 });
