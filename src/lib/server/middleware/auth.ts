@@ -1,5 +1,5 @@
-import { error, redirect } from '@sveltejs/kit';
-import type { RequestEvent } from '@sveltejs/kit';
+import { error, redirect } from "../../../server/http.js";
+import type { RequestEvent } from "../../../server/http.js";
 
 export async function requireLogin(event: RequestEvent) {
 	if (event.locals.currentUser) return event.locals.currentUser;

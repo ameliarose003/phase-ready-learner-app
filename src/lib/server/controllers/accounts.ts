@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
-import { error, fail, redirect } from '@sveltejs/kit';
-import type { RequestEvent } from '@sveltejs/kit';
+import { error, fail, redirect } from "../../../server/http.js";
+import type { RequestEvent } from "../../../server/http.js";
 import { findUserByEmail, verifyPassword } from '../forms/login.js';
 import { saveUser, getAllUsers, getUserById, updateUser, deleteUser } from '../forms/registration.js';
 import { registrationValidation, loginValidation, updateAccountValidation } from '../middleware/validation/forms.js';

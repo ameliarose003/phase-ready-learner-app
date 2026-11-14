@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestEvent } from "../../../server/http.js";
 import db from '../db.js';
 
 export async function authAttemptAllowed(event: RequestEvent, email: string, action: 'login' | 'signup') {

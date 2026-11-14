@@ -1,5 +1,5 @@
-import { dev } from '$app/env';
-import type { RequestEvent } from '@sveltejs/kit';
+const dev = import.meta.env.DEV;
+import type { RequestEvent } from "../../../server/http.js";
 
 export function globalMiddleware({ locals, url }: RequestEvent) {
 	locals.currentYear = new Date().getFullYear();
@@ -10,5 +10,4 @@ export function globalMiddleware({ locals, url }: RequestEvent) {
 	locals.isLoggedIn = false;
 }
 
-// Svelte components use CSS imports and <svelte:head> for styles/scripts.
-// There is no Express HTML-asset queue to copy into the rendered page.
+// Vue components import their styles directly.

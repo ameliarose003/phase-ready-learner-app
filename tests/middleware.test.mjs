@@ -74,7 +74,7 @@ before(async () => {
 	middleware = await server.ssrLoadModule('/src/hooks.server.ts');
 	sessions = await server.ssrLoadModule('/src/lib/server/sessions.ts');
 	auth = await server.ssrLoadModule('/src/lib/server/middleware/auth.ts');
-	layout = await server.ssrLoadModule('/src/routes/+layout.server.ts');
+	layout = await server.ssrLoadModule('/src/server/layout.ts');
 });
 
 beforeEach(() => {

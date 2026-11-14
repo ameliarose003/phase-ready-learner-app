@@ -1,9 +1,3 @@
-import * as env from '$app/env/private';
-import { dev } from '$app/env';
 import { createDatabase } from './postgres.js';
-
-// Import only in server files, such as +page.server.ts or +server.ts.
-// SvelteKit prevents modules in src/lib/server from reaching the browser.
-const db = createDatabase(env, dev);
-
-export default db;
+// This module is imported only by the server entry; never by the Vue browser entry.
+export default createDatabase(process.env, import.meta.env.DEV);

@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { dev } from '$app/env';
-import type { RequestEvent } from '@sveltejs/kit';
+const dev = import.meta.env.DEV;
+import type { RequestEvent } from "../../server/http.js";
 import db from './db.js';
 
 export type CurrentUser = { id: number; name: string; email: string; role_name: string };

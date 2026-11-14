@@ -12,8 +12,8 @@ export const createSlug = (...strings) =>
 		.replace(/-+/g, '-')
 		.replace(/^-|-$/g, '');
 
-// The database is passed in so the CLI can run without SvelteKit's virtual
-// environment modules. Run setup explicitly, never during page requests.
+// Pass the database explicitly so both the server and standalone CLI can use it.
+// Run setup explicitly, never during page requests.
 /** @param {ReturnType<import('./postgres.js').createDatabase>} db */
 export async function setupDatabase(db) {
 	await db.transaction(async (client) => {

@@ -1,4 +1,4 @@
-import { error, fail } from '@sveltejs/kit';
+import { error, fail } from "../../../server/http.js";
 
 export function routeId(raw: string | undefined) {
 	if (!raw || !/^\d+$/.test(raw)) error(404, 'Not found.');

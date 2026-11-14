@@ -1,5 +1,5 @@
-import { error, fail, redirect } from '@sveltejs/kit';
-import type { RequestEvent } from '@sveltejs/kit';
+import { error, fail, redirect } from "../../../server/http.js";
+import type { RequestEvent } from "../../../server/http.js";
 import { marked } from 'marked';
 import sanitizeHtml from 'sanitize-html';
 import { requireLogin, requireRole } from '../middleware/auth.js';

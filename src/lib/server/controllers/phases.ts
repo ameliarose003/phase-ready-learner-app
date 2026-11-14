@@ -1,5 +1,5 @@
-import { error, fail, redirect } from '@sveltejs/kit';
-import type { RequestEvent } from '@sveltejs/kit';
+import { error, fail, redirect } from "../../../server/http.js";
+import type { RequestEvent } from "../../../server/http.js";
 import { getAllPhases, getPhaseById, savePhase, updatePhase } from '../phases/phases.js';
 import { getAllLessons } from '../lessons/lessons.js';
 import { requireLogin, requireRole } from '../middleware/auth.js';

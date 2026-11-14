@@ -95,6 +95,34 @@ test('public pages and API work without exposing lesson content or credentials',
 	assert.match(me.headers.get('cache-control'), /no-store/);
 });
 
+test('Vue HTTP server rejects cross-origin writes and preserves HEAD, 404, and 405 responses', async () => {
+	const forged = await fetch(base + '/lessons/' + lessonId + '?/complete', {
+		method: 'POST', redirect: 'manual',
+		headers: {origin: 'https://unrelated.example', cookie: [...learner].map(([key, value]) => key + '=' + value).join('; ')}
+	});
+	assert.equal(forged.status, 403);
+	assert.match(forged.headers.get('cache-control'), /no-store/);
+	assert.equal((await visit('/does-not-exist')).status, 404);
+	assert.equal((await visit('/users/' + learnerId + '/delete', {jar: admin})).status, 405);
+	assert.equal((await visit('/%61dmin', {jar: learner})).status, 403);
+	const head = await visit('/login', {method: 'HEAD'});
+	assert.equal(head.status, 200);
+	assert.equal(await head.text(), '');
+});
+
+test('Vue hydration data escapes script delimiters and preserves literal replacement tokens', async () => {
+	const name = '</script><script>alert(1)</script> $&';
+	const response = await visit('/signup', {method: 'POST', data: {
+		name, email: 'invalid', confirmEmail: 'invalid', password: '', confirmPassword: ''
+	}});
+	assert.equal(response.status, 400);
+	const html = await response.text();
+	assert.ok(!html.includes('<script>alert(1)</script>'));
+	const payload = html.match(/<script type="application\/json" id="page-state">([\s\S]*?)<\/script>/)[1];
+	assert.equal(JSON.parse(payload).form.values.name, name);
+	assert.match(html, /<title>Sign up \| Phase Ready<\/title>/);
+});
+
 test('lesson pages guide learners and reserve editing controls for admins', async () => {
 	const publicList = await (await visit('/lessons')).text();
 	assert.match(publicList, /Log in to take this lesson/);
@@ -136,7 +164,7 @@ test('dashboard shows account details and dates, supports logout, and gates admi
 	assert.match(body, /March 15, 2025/);
 	assert.match(body, /datetime="2025-03-16T01:30:00.000Z"/);
 	assert.ok(body.includes('href="/users/' + learnerId + '/edit"'));
-	assert.match(body, /<form method="POST" action="\/logout">/);
+	assert.match(body, /<form method="POST" action="\/logout"[^>]*>/);
 	for (const path of ['/users', '/lessons/upload-video', '/admin/phases']) assert.ok(!body.includes('href="' + path + '"'));
 	const adminBody = await (await visit('/admin', { jar: admin })).text();
 	for (const path of ['/users', '/lessons/upload-video', '/admin/phases']) assert.ok(adminBody.includes('href="' + path + '"'));
@@ -156,10 +184,10 @@ test('learners resume unfinished lessons, save completion across sessions, and c
 	try {
 		let body = await (await visit('/dashboard', { jar: learner })).text();
 		assert.match(body, /0 of 3 lessons completed/);
-		assert.ok(body.includes('href="/lessons/' + lessonId + '">Start lesson'));
+		assert.match(body, new RegExp('href="/lessons/' + lessonId + '"[^>]*>Start lesson'));
 		await visit('/lessons/' + extra[1], { jar: learner });
 		body = await (await visit('/dashboard', { jar: learner })).text();
-		assert.ok(body.includes('href="/lessons/' + extra[1] + '">Continue lesson'));
+		assert.match(body, new RegExp('href="/lessons/' + extra[1] + '"[^>]*>Continue lesson'));
 		const complete = '/lessons/' + extra[1] + '?/complete';
 		assert.equal((await visit(complete, { jar: learner, method: 'POST', data: { user_id: String(adminId) } })).status, 303);
 		const saved = (await driver.query('SELECT completed_at FROM lesson_progress WHERE user_id = $1 AND lesson_id = $2', [learnerId, extra[1]])).rows[0].completed_at;
@@ -172,7 +200,7 @@ test('learners resume unfinished lessons, save completion across sessions, and c
 		body = await (await visit('/dashboard', { jar: freshSession })).text();
 		assert.match(body, /1 of 3 lessons completed · 33%/);
 		assert.match(body, /Review lesson/);
-		assert.ok(body.includes('href="/lessons/' + lessonId + '">Start lesson'));
+		assert.match(body, new RegExp('href="/lessons/' + lessonId + '"[^>]*>Start lesson'));
 		for (const id of [lessonId, extra[0]]) await visit('/lessons/' + id + '?/complete', { jar: learner, method: 'POST', data: {} });
 		body = await (await visit('/dashboard', { jar: learner })).text();
 		assert.match(body, /3 of 3 lessons completed · 100%/);

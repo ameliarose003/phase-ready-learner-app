@@ -1,5 +1,5 @@
-import type { Handle } from '@sveltejs/kit/hooks';
-import { error } from '@sveltejs/kit';
+import type { Handle } from "./server/http.js";
+import { error } from "./server/http.js";
 import { globalMiddleware } from '#lib/server/middleware/global.js';
 import { createFlash } from '#lib/server/middleware/flash.js';
 import { requireRole } from '#lib/server/middleware/auth.js';

@@ -1,47 +1,47 @@
 {
-	"name": "learners-app",
-	"private": true,
-	"version": "0.0.1",
-	"type": "module",
-	"engines": {
-		"node": "^22.17.0 || ^24.0.0"
-	},
-	"scripts": {
-		"test": "npm run test:middleware && npm run test:validation && npm run test:routes",
-		"test:routes": "node --test tests/routes.test.mjs",
-		"user:admin": "node --env-file-if-exists=.env scripts/promote-admin.js",
-		"test:validation": "node --test tests/validation.test.mjs",
-		"test:middleware": "node --test tests/middleware.test.mjs",
-		"db:setup": "node --env-file-if-exists=.env scripts/setup-db.js",
-		"dev": "vite dev",
-		"start": "node build/index.js",
-		"build": "vite build",
-		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
-	},
-	"devDependencies": {
-		"@electric-sql/pglite": "^0.5.10",
-		"@sveltejs/adapter-node": "^6.0.0",
-		"@sveltejs/kit": "^3.0.0",
-		"@sveltejs/vite-plugin-svelte": "^7.2.0",
-		"@types/bcrypt": "^6.0.0",
-		"@types/pg": "^8.23.1",
-		"@types/sanitize-html": "^2.16.2",
-		"svelte": "^5.57.1",
-		"svelte-check": "^4.6.0",
-		"typescript": "^6.0.3",
-		"vite": "^8.3.0"
-	},
-	"imports": {
-		"#lib": "./src/lib/index.js",
-		"#lib/*": "./src/lib/*"
-	},
-	"dependencies": {
-		"bcrypt": "^6.0.0",
-		"marked": "^18.1.1",
-		"pg": "^8.23.1",
-		"sanitize-html": "^2.18.1"
-	}
+  "name": "learners-app",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "engines": {
+    "node": "^22.17.0 || ^24.0.0"
+  },
+  "scripts": {
+    "test": "npm run test:middleware && npm run test:validation && npm run test:routes",
+    "test:routes": "node --test tests/routes.test.mjs",
+    "user:admin": "node --env-file-if-exists=.env scripts/promote-admin.js",
+    "test:validation": "node --test tests/validation.test.mjs",
+    "test:middleware": "node --test tests/middleware.test.mjs",
+    "db:setup": "node --env-file-if-exists=.env scripts/setup-db.js",
+    "dev": "vite dev",
+    "start": "node --env-file-if-exists=.env build/server/production.js",
+    "build": "node scripts/build.mjs",
+    "test:production": "node scripts/smoke-production.mjs",
+    "preview": "npm start",
+    "check": "vue-tsc --noEmit",
+    "check:watch": "vue-tsc --noEmit --watch"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "@types/bcrypt": "^6.0.0",
+    "@types/pg": "^8.23.1",
+    "@types/sanitize-html": "^2.16.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.0",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "@types/node": "^24.0.0",
+    "vue-tsc": "^3.0.0"
+  },
+  "imports": {
+    "#lib": "./src/lib/index.js",
+    "#lib/*": "./src/lib/*"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "marked": "^18.1.1",
+    "pg": "^8.23.1",
+    "sanitize-html": "^2.18.1",
+    "vue": "^3.5.0",
+    "@vue/server-renderer": "^3.5.0"
+  }
 }

@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 
-// Shared by SvelteKit and the standalone setup command. No connection is opened
+// Shared by the Vue server and the standalone setup command. No connection is opened
 // until the first query, so building the UI does not require a database.
 /** @param {{ DB_URL?: string, ENABLE_SQL_LOGGING?: string }} env */
 export function createDatabase(env, development = false) {
